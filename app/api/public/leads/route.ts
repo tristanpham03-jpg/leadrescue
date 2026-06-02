@@ -40,9 +40,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Monthly lead limit reached" }, { status: 402 });
   }
 
+  const service = typeof body.service === "string" && body.service.trim() ? body.service.trim() : null;
+  const message = service ? `Service requested: ${service}\n\n${parsed.data.message}` : parsed.data.message;
+
   const { data: leadData, error } = await supabase
     .from("leads")
-    .insert({ ...parsed.data, business_id: business.id, status: "New" })
+    .insert({ ...parsed.data, message, business_id: business.id, status: "New" })
     .select()
     .single();
   const lead = leadData as Lead | null;

@@ -24,6 +24,11 @@ create table public.businesses (
   reminder_72h_template text not null default 'Hi {{lead_name}}, {{business_name}} wanted to follow up one more time about: {{service_requested}}. Reply here or call us when convenient.',
   follow_up_reminders_enabled boolean not null default true,
   ai_tone text not null default 'Professional',
+  capture_form_headline text not null default 'Request a Quote',
+  capture_form_button_text text not null default 'Send Request',
+  capture_form_success_message text not null default 'Thanks! We received your request and will follow up shortly.',
+  capture_form_primary_color text not null default '#16a34a',
+  capture_form_services text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique(user_id)

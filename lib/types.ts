@@ -25,6 +25,11 @@ export type Business = {
   reminder_72h_template: string;
   follow_up_reminders_enabled: boolean;
   ai_tone: AiTone;
+  capture_form_headline: string | null;
+  capture_form_button_text: string | null;
+  capture_form_success_message: string | null;
+  capture_form_primary_color: string | null;
+  capture_form_services: string[] | null;
   created_at: string;
   updated_at: string;
 };

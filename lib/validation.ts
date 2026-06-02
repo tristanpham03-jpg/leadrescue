@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { captureFormDefaults } from "@/lib/captureFormDefaults";
 
 export const authSchema = z.object({
   email: z.string().email(),
@@ -34,4 +35,12 @@ export const automationTemplateSchema = z.object({
   ai_tone: z.enum(["Professional", "Friendly", "Urgent", "Short and Direct"]).default("Professional"),
   reminder_24h_template: z.string().min(20),
   reminder_72h_template: z.string().min(20)
+});
+
+export const websiteSetupSchema = z.object({
+  capture_form_headline: z.string().trim().min(2).default(captureFormDefaults.headline),
+  capture_form_button_text: z.string().trim().min(2).default(captureFormDefaults.buttonText),
+  capture_form_success_message: z.string().trim().min(8).default(captureFormDefaults.successMessage),
+  capture_form_primary_color: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "Use a valid hex color like #16a34a").default(captureFormDefaults.primaryColor),
+  capture_form_services: z.string().optional().default("")
 });

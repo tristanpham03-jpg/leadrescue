@@ -2,9 +2,19 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Input, Textarea } from "@/components/ui/Input";
+import { Input, Select, Textarea } from "@/components/ui/Input";
 
-export function PublicLeadCaptureForm({ businessId, businessName }: { businessId: string; businessName: string }) {
+type PublicLeadCaptureFormProps = {
+  businessId: string;
+  businessName: string;
+  headline: string;
+  buttonText: string;
+  successMessage: string;
+  primaryColor: string;
+  services: string[];
+};
+
+export function PublicLeadCaptureForm({ businessId, businessName, headline, buttonText, successMessage, primaryColor, services }: PublicLeadCaptureFormProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -32,17 +42,25 @@ export function PublicLeadCaptureForm({ businessId, businessName }: { businessId
   return (
     <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-soft">
       <div>
-        <h1 className="text-2xl font-bold text-slate-950">Contact {businessName}</h1>
-        <p className="mt-1 text-sm text-slate-500">Send your request and the team will follow up shortly.</p>
+        <h1 className="text-2xl font-bold text-slate-950">{headline}</h1>
+        <p className="mt-1 text-sm text-slate-500">Send your request to {businessName} and the team will follow up shortly.</p>
       </div>
       <Input name="name" placeholder="Name" required />
       <Input type="email" name="email" placeholder="Email" required />
       <Input name="phone" placeholder="Phone" />
+      {services.length > 0 && (
+        <Select name="service" defaultValue="">
+          <option value="" disabled>Select a service</option>
+          {services.map((service) => (
+            <option key={service} value={service}>{service}</option>
+          ))}
+        </Select>
+      )}
       <Textarea name="message" placeholder="How can we help?" required />
-      {status === "success" && <p className="rounded-md bg-rescue-50 p-3 text-sm text-rescue-700">Thanks. Your request was sent.</p>}
+      {status === "success" && <p className="rounded-md bg-rescue-50 p-3 text-sm text-rescue-700">{successMessage}</p>}
       {status === "error" && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error ?? "Something went wrong. Please try again."}</p>}
-      <Button className="w-full" disabled={status === "loading"}>
-        {status === "loading" ? "Sending..." : "Send request"}
+      <Button className="w-full hover:opacity-90" disabled={status === "loading"} style={{ backgroundColor: primaryColor }}>
+        {status === "loading" ? "Sending..." : buttonText}
       </Button>
     </form>
   );
