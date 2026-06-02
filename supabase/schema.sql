@@ -29,6 +29,8 @@ create table public.businesses (
   capture_form_success_message text not null default 'Thanks! We received your request and will follow up shortly.',
   capture_form_primary_color text not null default '#16a34a',
   capture_form_services text[] not null default '{}',
+  onboarding_website_link_copied boolean not null default false,
+  onboarding_automation_reviewed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique(user_id)

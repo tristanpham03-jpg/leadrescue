@@ -30,6 +30,8 @@ export type Business = {
   capture_form_success_message: string | null;
   capture_form_primary_color: string | null;
   capture_form_services: string[] | null;
+  onboarding_website_link_copied: boolean;
+  onboarding_automation_reviewed: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -66,6 +68,8 @@ export type DashboardStats = {
   contactedLeads: number;
   quotedLeads: number;
   wonLeads: number;
+  lostLeads: number;
+  leadsNeedingFollowUp: number;
   leadsThisMonth: number;
   responseRate: number;
   conversionRate: number;

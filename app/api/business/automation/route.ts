@@ -16,7 +16,7 @@ export async function PATCH(request: Request) {
   const parsed = automationTemplateSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
-  const { error } = await supabase.from("businesses").update(parsed.data).eq("id", business.id);
+  const { error } = await supabase.from("businesses").update({ ...parsed.data, onboarding_automation_reviewed: true }).eq("id", business.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

@@ -19,8 +19,10 @@ export async function POST(request: Request) {
   const { plan } = (await request.json()) as { plan: PlanCode };
   if (!plans[plan]) return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
 
+  if (!process.env.STRIPE_SECRET_KEY) return NextResponse.json({ error: "Billing is not configured yet. You can still test LeadRescue without subscribing." }, { status: 503 });
+
   const priceId = process.env[plans[plan].stripePriceEnv];
-  if (!priceId) return NextResponse.json({ error: `Missing ${plans[plan].stripePriceEnv}` }, { status: 500 });
+  if (!priceId) return NextResponse.json({ error: "Billing is not configured yet. You can still test LeadRescue without subscribing." }, { status: 503 });
 
   const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({

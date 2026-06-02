@@ -41,6 +41,9 @@ export async function POST(request: Request) {
   }
 
   const service = typeof body.service === "string" && body.service.trim() ? body.service.trim() : null;
+  if (service && !(business.capture_form_services ?? []).some((item) => item.toLowerCase() === service.toLowerCase())) {
+    return NextResponse.json({ error: "Choose a valid service from the form." }, { status: 400 });
+  }
   const message = service ? `Service requested: ${service}\n\n${parsed.data.message}` : parsed.data.message;
 
   const { data: leadData, error } = await supabase

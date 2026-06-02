@@ -70,6 +70,7 @@ export function LeadsTable({ leads }: { leads: Lead[] }) {
   const [aiReply, setAiReply] = useState<AiReplyState | null>(null);
   const [messageLead, setMessageLead] = useState<Lead | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
   useEffect(() => setActiveLeads(leads), [leads]);
   useEffect(() => setPage(1), [query, status, sortKey, sortDirection]);
@@ -107,6 +108,7 @@ export function LeadsTable({ leads }: { leads: Lead[] }) {
   }
 
   async function updateStatus(lead: Lead, nextStatus: LeadStatus) {
+    setStatusUpdatingId(lead.id);
     setActiveLeads((current) => current.map((item) => (item.id === lead.id ? { ...item, status: nextStatus } : item)));
     const response = await fetch(`/api/leads/${lead.id}`, {
       method: "PATCH",
@@ -116,8 +118,10 @@ export function LeadsTable({ leads }: { leads: Lead[] }) {
     if (!response.ok) {
       setActiveLeads((current) => current.map((item) => (item.id === lead.id ? lead : item)));
       window.alert("Unable to update lead status.");
+      setStatusUpdatingId(null);
       return;
     }
+    setStatusUpdatingId(null);
     setMessage("Lead status updated.");
   }
 
@@ -199,7 +203,7 @@ export function LeadsTable({ leads }: { leads: Lead[] }) {
                     {lead.phone && <a href={`tel:${lead.phone}`} onClick={(event) => event.stopPropagation()} className="mt-1 inline-flex items-center gap-1 text-slate-600 hover:text-rescue-700 hover:underline"><Phone className="h-3.5 w-3.5" /><Highlight value={lead.phone} query={query} /></a>}
                   </td>
                   <td className="px-4 py-3 text-slate-600"><span className="line-clamp-1 inline-block max-w-56 align-middle"><Highlight value={lead.message} query={query} /></span><button onClick={(event) => { event.stopPropagation(); setMessageLead(lead); }} className="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-rescue-700 hover:underline"><Eye className="h-3.5 w-3.5" />View</button></td>
-                  <td className="px-4 py-3"><select value={lead.status} onClick={(event) => event.stopPropagation()} onChange={(event) => updateStatus(lead, event.target.value as LeadStatus)} className={`h-8 min-w-28 rounded-md border px-2 text-xs font-bold outline-none focus:ring-2 focus:ring-rescue-500 ${statusBadgeClass(lead.status)}`}>{editableStatuses.map((leadStatus) => <option key={leadStatus}>{leadStatus}</option>)}</select></td>
+                  <td className="px-4 py-3"><select value={lead.status} disabled={statusUpdatingId === lead.id} onClick={(event) => event.stopPropagation()} onChange={(event) => updateStatus(lead, event.target.value as LeadStatus)} className={`h-8 min-w-28 rounded-md border px-2 text-xs font-bold outline-none focus:ring-2 focus:ring-rescue-500 ${statusBadgeClass(lead.status)}`}>{editableStatuses.map((leadStatus) => <option key={leadStatus}>{leadStatus}</option>)}</select></td>
                   <td className="px-4 py-3 text-slate-500">{formatRelativeTime(lead.created_at)}</td>
                   <td className="px-4 py-3"><Button variant="secondary" onClick={(event) => { event.stopPropagation(); generateAiReply(lead); }} className="h-8 px-3 text-xs"><Bot className="h-4 w-4" />Generate</Button></td>
                   <td className="px-4 py-3 text-right"><button onClick={(event) => { event.stopPropagation(); deleteLead(lead.id); }} className="rounded-md p-2 text-red-600 hover:bg-red-50" aria-label="Move lead to trash"><Trash2 className="h-4 w-4" /></button></td>

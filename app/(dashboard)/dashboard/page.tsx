@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LeadStatusChart } from "@/components/dashboard/LeadStatusChart";
+import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { getBusinessForUser, getCurrentUser, getDashboardStats, getLeadsForBusiness } from "@/lib/data";
 
@@ -32,12 +33,17 @@ export default async function DashboardPage() {
         <div>
           <p className="text-sm font-semibold uppercase text-rescue-700">{business.business_name}</p>
           <h1 className="text-3xl font-bold text-slate-950">Lead dashboard</h1>
+          <p className="mt-2 text-sm text-slate-500">See what needs attention, what is moving forward, and where customers are converting.</p>
         </div>
         <Link href={`/capture/${business.id}`} className="text-sm font-semibold text-rescue-700">
           Public lead form
         </Link>
       </div>
+      <OnboardingChecklist business={business} leads={leads} />
       <StatsCards stats={stats} />
+      {stats.leadsNeedingFollowUp === 0 && (
+        <p className="rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-500">No follow-ups needed right now.</p>
+      )}
       <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
         <LeadStatusChart stats={stats} />
         <div className="rounded-lg border border-slate-200 bg-white p-5">

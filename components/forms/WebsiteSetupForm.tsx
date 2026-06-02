@@ -1,16 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, ExternalLink, Save } from "lucide-react";
+import { Check, Copy, ExternalLink, Plus, Save, X } from "lucide-react";
 import type { Business } from "@/lib/types";
 import { captureFormDefaults } from "@/lib/captureFormDefaults";
 import { Button } from "@/components/ui/Button";
-import { Input, Textarea } from "@/components/ui/Input";
+import { Input, Select, Textarea } from "@/components/ui/Input";
 
 type CopyTarget = "link" | "embed" | null;
 
 function getValue(value: string | null | undefined, fallback: string) {
   return value?.trim() || fallback;
+}
+
+function cleanService(value: string) {
+  return value.trim().replace(/\s+/g, " ");
 }
 
 export function WebsiteSetupForm({ business, appUrl }: { business: Business; appUrl: string }) {
@@ -20,11 +24,45 @@ export function WebsiteSetupForm({ business, appUrl }: { business: Business; app
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [serviceInput, setServiceInput] = useState("");
+  const [serviceError, setServiceError] = useState<string | null>(null);
+  const [services, setServices] = useState<string[]>(business.capture_form_services ?? []);
+
+  async function markWebsiteLinkCopied() {
+    await fetch("/api/business/onboarding", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ website_link_copied: true })
+    }).catch(() => undefined);
+  }
 
   async function copyToClipboard(value: string, target: CopyTarget) {
     await navigator.clipboard.writeText(value);
+    if (target === "link") await markWebsiteLinkCopied();
     setCopied(target);
     window.setTimeout(() => setCopied(null), 2200);
+  }
+
+  function addService() {
+    const nextService = cleanService(serviceInput);
+    if (!nextService) {
+      setServiceError("Type a service before adding it.");
+      return;
+    }
+    if (services.some((service) => service.toLowerCase() === nextService.toLowerCase())) {
+      setServiceError("That service is already in the list.");
+      return;
+    }
+    setServices((current) => [...current, nextService]);
+    setServiceInput("");
+    setServiceError(null);
+    setSaved(false);
+  }
+
+  function removeService(serviceToRemove: string) {
+    setServices((current) => current.filter((service) => service !== serviceToRemove));
+    setServiceError(null);
+    setSaved(false);
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -99,27 +137,71 @@ export function WebsiteSetupForm({ business, appUrl }: { business: Business; app
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm font-medium text-slate-700">
             Form headline
-            <Input name="capture_form_headline" defaultValue={getValue(business.capture_form_headline, captureFormDefaults.headline)} className="mt-1" />
+            <Input name="capture_form_headline" defaultValue={getValue(business.capture_form_headline, captureFormDefaults.headline)} className="mt-1" onChange={() => setSaved(false)} />
           </label>
           <label className="text-sm font-medium text-slate-700">
             Submit button text
-            <Input name="capture_form_button_text" defaultValue={getValue(business.capture_form_button_text, captureFormDefaults.buttonText)} className="mt-1" />
+            <Input name="capture_form_button_text" defaultValue={getValue(business.capture_form_button_text, captureFormDefaults.buttonText)} className="mt-1" onChange={() => setSaved(false)} />
           </label>
         </div>
         <label className="block text-sm font-medium text-slate-700">
           Success message
-          <Input name="capture_form_success_message" defaultValue={getValue(business.capture_form_success_message, captureFormDefaults.successMessage)} className="mt-1" />
+          <Input name="capture_form_success_message" defaultValue={getValue(business.capture_form_success_message, captureFormDefaults.successMessage)} className="mt-1" onChange={() => setSaved(false)} />
         </label>
-        <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
-          <label className="text-sm font-medium text-slate-700">
-            Primary color
-            <Input type="color" name="capture_form_primary_color" defaultValue={getValue(business.capture_form_primary_color, captureFormDefaults.primaryColor)} className="mt-1 h-11 p-1" />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            Optional services dropdown list
-            <Input name="capture_form_services" defaultValue={(business.capture_form_services ?? []).join(", ")} placeholder="Water heater repair, Drain cleaning, Emergency service" className="mt-1" />
-          </label>
+        <label className="block max-w-44 text-sm font-medium text-slate-700">
+          Primary color
+          <Input type="color" name="capture_form_primary_color" defaultValue={getValue(business.capture_form_primary_color, captureFormDefaults.primaryColor)} className="mt-1 h-11 p-1" onChange={() => setSaved(false)} />
+        </label>
+
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <label className="block text-sm font-medium text-slate-700">Optional services dropdown list</label>
+          <input type="hidden" name="capture_form_services" value={services.join(",")} />
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <Input
+              value={serviceInput}
+              onChange={(event) => {
+                setServiceInput(event.target.value);
+                setServiceError(null);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  addService();
+                }
+              }}
+              placeholder="Type a service and press Enter"
+            />
+            <Button type="button" variant="secondary" onClick={addService} className="shrink-0">
+              <Plus className="h-4 w-4" />
+              Add Service
+            </Button>
+          </div>
+          {serviceError && <p className="mt-2 text-sm font-medium text-red-700">{serviceError}</p>}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {services.map((service) => (
+              <span key={service} className="inline-flex max-w-full items-center gap-2 rounded-full border border-rescue-100 bg-rescue-50 px-3 py-1 text-sm font-medium text-rescue-800">
+                <span className="truncate">{service}</span>
+                <button type="button" onClick={() => removeService(service)} className="rounded-full p-0.5 text-rescue-700 hover:bg-rescue-100" aria-label={`Remove ${service}`}>
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+            {!services.length && <p className="text-sm text-slate-500">No services added yet. Customers will only see the message field.</p>}
+          </div>
+          <div className="mt-5 rounded-md border border-slate-200 bg-white p-4">
+            <p className="text-sm font-semibold text-slate-900">Public form preview</p>
+            <p className="mt-1 text-xs text-slate-500">This is how the services dropdown will appear to customers.</p>
+            {services.length ? (
+              <Select className="mt-3" defaultValue="">
+                <option value="" disabled>Select a service</option>
+                {services.map((service) => <option key={service}>{service}</option>)}
+              </Select>
+            ) : (
+              <p className="mt-3 rounded-md bg-slate-50 p-3 text-sm text-slate-500">No services dropdown will be shown.</p>
+            )}
+          </div>
         </div>
+
         {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {saved && <p className="rounded-md border border-rescue-100 bg-rescue-50 p-3 text-sm font-medium text-rescue-700">Website setup settings saved.</p>}
         <Button disabled={loading}>

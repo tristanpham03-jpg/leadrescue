@@ -1,4 +1,4 @@
-import { subDays, startOfMonth } from "date-fns";
+import { subDays, startOfMonth, subHours } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import type { Business, DashboardStats, Lead, LeadStatus, Subscription } from "@/lib/types";
 
@@ -64,6 +64,9 @@ export async function getDeletedLeadsForBusiness(businessId: string) {
 export async function getDashboardStats(businessId: string): Promise<DashboardStats> {
   const supabase = await createClient();
   const monthStart = startOfMonth(new Date()).toISOString();
+  const now = new Date();
+  const newFollowUpCutoff = subHours(now, 24).toISOString();
+  const contactedFollowUpCutoff = subHours(now, 72).toISOString();
   const { data: leads } = await supabase.from("leads").select("*").eq("business_id", businessId).is("deleted_at", null);
   const allLeads = (leads ?? []) as Lead[];
   const contactedStatuses: LeadStatus[] = ["Contacted", "Quoted", "Won"];
@@ -71,6 +74,11 @@ export async function getDashboardStats(businessId: string): Promise<DashboardSt
     status,
     count: allLeads.filter((lead) => lead.status === status).length
   }));
+  const leadsNeedingFollowUp = allLeads.filter((lead) => {
+    if (lead.status === "New") return lead.created_at <= newFollowUpCutoff;
+    if (lead.status === "Contacted") return lead.updated_at <= contactedFollowUpCutoff;
+    return false;
+  }).length;
 
   return {
     totalLeads: allLeads.length,
@@ -78,6 +86,8 @@ export async function getDashboardStats(businessId: string): Promise<DashboardSt
     contactedLeads: allLeads.filter((lead) => lead.status === "Contacted").length,
     quotedLeads: allLeads.filter((lead) => lead.status === "Quoted").length,
     wonLeads: allLeads.filter((lead) => lead.status === "Won").length,
+    lostLeads: allLeads.filter((lead) => lead.status === "Lost").length,
+    leadsNeedingFollowUp,
     leadsThisMonth: allLeads.filter((lead) => lead.created_at >= monthStart).length,
     responseRate: allLeads.length ? Math.round((allLeads.filter((lead) => Boolean(lead.ai_response)).length / allLeads.length) * 100) : 0,
     conversionRate: allLeads.length ? Math.round((allLeads.filter((lead) => lead.status === "Won").length / allLeads.length) * 100) : 0,
