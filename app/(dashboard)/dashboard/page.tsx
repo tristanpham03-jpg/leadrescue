@@ -15,6 +15,11 @@ export default async function DashboardPage() {
       <EmptyState
         title="Set up your business profile"
         description="Add your business details so LeadRescue can generate accurate lead responses."
+        action={
+          <Link href="/business" className="inline-flex h-10 items-center justify-center rounded-md bg-rescue-600 px-4 text-sm font-semibold text-white transition hover:bg-rescue-700">
+            Create business profile
+          </Link>
+        }
       />
     );
   }
