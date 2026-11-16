@@ -1,6 +1,10 @@
 # LeadRescue
 
-LeadRescue is a production-quality MVP SaaS for local service businesses that automatically follows up with website leads and alerts the owner.
+Lead capture and follow-up for local service businesses. A business adds a form to its website; LeadRescue stores each lead, drafts a reply with the OpenAI API, emails the customer and the owner, and reminds the owner to follow up.
+
+**Status:** in development. It is not deployed for customers.
+
+**Stack:** Next.js 16 (App Router), TypeScript, Tailwind CSS, Supabase (Auth, Postgres, row-level security), OpenAI API, Resend, Vercel.
 
 ## What is included
 
@@ -12,7 +16,7 @@ LeadRescue is a production-quality MVP SaaS for local service businesses that au
 - OpenAI-generated lead responses
 - Resend email delivery for customer replies and owner notifications
 - 24-hour and 72-hour reminder workflow endpoint
-- Stripe subscription checkout and webhook support
+- Stripe subscription checkout and webhook routes (written, not yet connected to a live Stripe account)
 - Starter, Pro, and Agency plan definitions with intake limits
 
 ## Local development
